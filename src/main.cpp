@@ -27,7 +27,6 @@ unsigned long previousMillis = 0;
 unsigned long call_interval = 15250;
 unsigned long one_second = 1000;
 
-int movementCount = 0;
 int data[5] = {0, 0, 3, 1, 1};
 int dataLen = sizeof(data)/sizeof(data[0]);
 int fields[5] = {1, 2, 3, 4, 5};
@@ -35,6 +34,7 @@ int fieldsLen = sizeof(fields)/sizeof(fields[0]);
 int FEED_PORTION, SNACK_PORTION, FEED_TRIGGER = 0, SNACK_TRIGGER = 0, portionCount = 0, PORTION_SIZE = 4;
 
 #pragma region FUNCTIONS
+
 void motorOn(){
     pcf.write(MOTOR_PIN, LOW);
 }
@@ -142,8 +142,6 @@ void advanceMotor() {
     Serial.printf("gap found!\n");
 
     motorOff();
-    
-    movementCount++;
 
     ledGreen();
   } 
@@ -201,7 +199,6 @@ int writeThingSpeak(int _feedTrigger = 0, int _snackTrigger = 0, int _feedPortio
 }
 
 #pragma endregion
-
 
 void setup() {
   Serial.begin(9600);
@@ -289,7 +286,7 @@ void loop() {
         ledGreen();
     }
     
-    Serial.printf("Switch open: %s - Movements: %d\n", ((switchOpen() == true) ? "True" : "False"), movementCount);    
+    Serial.printf("Switch open: %s\n", ((switchOpen() == true) ? "True" : "False"));    
     lastMillis = millis();
   }
 
