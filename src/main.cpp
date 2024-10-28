@@ -28,15 +28,22 @@ int data[5] = {0, 0, 3, 1, 1};
 int dataLen = sizeof(data)/sizeof(data[0]);
 int fields[5] = {1, 2, 3, 4, 5};
 int fieldsLen = sizeof(fields)/sizeof(fields[0]);
-int FEED_PORTION, SNACK_PORTION, FEED_TRIGGER = 0, SNACK_TRIGGER = 0, portionCount = 0, PORTION_SIZE = 4;
+
+int FEED_TRIGGER = 0;
+int SNACK_TRIGGER = 0;
+
+int FEED_PORTION = 4;
+int SNACK_PORTION = 1;
+
+int PORTION_SIZE = 4;
 
 #pragma region FUNCTIONS
 
-void motorOn(){
+void motorOn() {
     pcf.write(MOTOR_PIN, LOW);
 }
 
-void motorOff(){
+void motorOff() {
   pcf.write(MOTOR_PIN, HIGH);
 }
 
@@ -48,51 +55,44 @@ boolean motorRunning() {
   return (pcf.read(MOTOR_PIN) == LOW ? true : false);
  }
 
-void ledOff()
-{
+void ledOff() {
   LED[0] = CRGB::Black;
   FastLED.show();
   delay(30);
 }
 
-void ledBlue()
-{
+void ledBlue() {
   LED[0] = CRGB::Blue;
   FastLED.show();
   delay(30);
 }
 
-void ledGreen()
-{
+void ledGreen() {
   LED[0] = CRGB::Green;
   FastLED.show();
   delay(30);
 }
 
-void ledRed()
-{
+void ledRed() {
   LED[0] = CRGB::Red;
   FastLED.show();
   delay(30);
 }
 
-void ledYellow()
-{
+void ledYellow() {
   LED[0] = CRGB::Yellow;
   FastLED.show();
   delay(30);
 }
 
-void ledPurple()
-{
+void ledPurple() {
   LED[0] = CRGB::Purple;
   FastLED.show();
   delay(30);
 }
 
-void ledRedBlue()
-{
-  for(int j=0;j<=4;j++){
+void ledRedBlue() {
+  for(int j=0;j<=4;j++) {
     LED[0] = CRGB::Red;
     FastLED.show();
     delay(75);
@@ -102,9 +102,8 @@ void ledRedBlue()
   }
 }
 
-void ledRedGreen()
-{
-  for(int j=0;j<=4;j++){
+void ledRedGreen() {
+  for(int j=0;j<=4;j++) {
     LED[0] = CRGB::Red;
     FastLED.show();
     delay(75);
@@ -117,10 +116,10 @@ void ledRedGreen()
 void advanceMotor() {
   if(!motorRunning()) motorOn();
   
-  if(motorRunning()){
+  if(motorRunning()) {
     // if motor is running, wait for the next fin to be detected
     Serial.printf("Looking for fin..");
-    while(switchOpen() == true){      
+    while(switchOpen() == true) {      
       ledRedBlue();
       Serial.printf(".");
       delay(25);
@@ -142,13 +141,12 @@ void advanceMotor() {
   } 
 }
 
-int readThingSpeak()
-{
+int readThingSpeak() {
   int statusCode = ThingSpeak.readMultipleFields(myChannelNumber, READ_API_KEY);
   int zeros = 0;
   
-  if(statusCode == 200){
-    for(int i=0;i<fieldsLen;i++){
+  if(statusCode == 200) {
+    for(int i=0;i<fieldsLen;i++) {
       data[i] = ThingSpeak.getFieldAsInt(fields[i]);
       Serial.printf("Field %d value: %d\n", fields[i], data[i]);
       data[i] == 0 ? zeros++;
@@ -163,15 +161,13 @@ int readThingSpeak()
     } else {
       Serial.printf("Error with data. Too many zero values.\nFEED_TRIGGER: %d\nSNACK_TRIGGER: %d\nFEED_PORTION: %d\nSNACK_PORTION: %d");      
       writeThingSpeak();
-      lastWriteMillis = millis();
     }
   }
   return statusCode;
 }
 
-int writeThingSpeak(int _feedTrigger = 0, int _snackTrigger = 0, int _feedPortion = FEED_PORTION, int _snackPortion = SNACK_PORTION,  int _portionSize = PORTION_SIZE)
-{
-  delay(call_timeout - (millis() - lastWriteMillis);
+int writeThingSpeak(int _feedTrigger = 0, int _snackTrigger = 0, int _feedPortion = FEED_PORTION, int _snackPortion = SNACK_PORTION,  int _portionSize = PORTION_SIZE) {
+  delay(call_timeout - (-lastWriteMillis + millis()));
     
   Serial.printf("Writing API values...\n");
   ThingSpeak.setField(1, _feedTrigger);
@@ -208,10 +204,7 @@ void setup() {
 
   FastLED.addLeds<NEOPIXEL, LED_PIN>(LED, LED_COUNT);
 
-  unsigned long currentMillis = millis();
-  unsigned long lastMillis = millis();
-  unsigned long lastWriteMillis = millis() - call_timeout;
-  unsigned long previousMillis = 0;
+  unsigned long lastMillis = millis() + one_second; 
 
   ledRed();
 
@@ -240,10 +233,8 @@ void loop() {
   FEED_TRIGGER = 0;
   SNACK_TRIGGER = 0;
 
-  if(millis() - lastMillis >= one_second) {      
-      
+  if((-lastMillis) + millis() >= one_second) {          
     if(readThingSpeak() == 200) {
-        
       if(FEED_TRIGGER == 1){
         for(int j=1;j<=FEED_PORTION * PORTION_SIZE;j++){
           advanceMotor();                  
@@ -260,19 +251,13 @@ void loop() {
         }
         SNACK_TRIGGER = 0;
         writeThingSpeak(0, SNACK_TRIGGER, FEED_PORTION, SNACK_PORTION, PORTION_SIZE);
-     }
-        
+     }      
   }
 
-  for(int i=0;i<BUTTON_COUNT;i++)
-  {
-    int buttonState = pcf.read(BUTTON_PINS[i]);
-
-    if(buttonState == LOW) 
-    {
+  for(int i=0;i<BUTTON_COUNT;i++) {
+    if(pcf.read(BUTTON_PINS[i]) == LOW) {
       Serial.printf("You pressed button %d!\n", i);
-      switch(i)
-      {
+      switch(i) {
         case 0: 
           ledRed();
           motorOff();
